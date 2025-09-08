@@ -4,7 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from '../store/authStore';
 import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
-import  EventsPage  from '../pages/EventsPage';
+import  {EventsPage}  from '../pages/EventsPage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import  HomePage  from '../pages/HomePage';
