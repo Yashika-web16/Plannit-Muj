@@ -9,6 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
+  "engines": {
+  "node": "22.x"
+},
   "dependencies": {
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.12",
