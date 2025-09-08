@@ -8,7 +8,7 @@ import { useAuthStore } from '../store/authStore';
 import { mockUsers } from '../data/mockData';
 import toast from 'react-hot-toast';
 
-export const LoginPage: React.FC = () => {
+const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
@@ -198,3 +198,5 @@ export const LoginPage: React.FC = () => {
     </div>
   );
 };
+
+export default LoginPage

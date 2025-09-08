@@ -8,9 +8,9 @@ import { useAuthStore } from '../store/authStore';
 import { departments } from '../data/mockData';
 import toast from 'react-hot-toast';
 
-export const RegisterPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { login } = useAuthStore();
+const RegisterPage: React.FC = () => {
+const navigate = useNavigate();
+const { login } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -301,3 +301,5 @@ export const RegisterPage: React.FC = () => {
     </div>
   );
 };
+
+export default RegisterPage
