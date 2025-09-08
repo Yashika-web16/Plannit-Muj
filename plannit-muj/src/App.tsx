@@ -4,10 +4,10 @@ import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from '../store/authStore';
 import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
-import  {EventsPage}  from '../pages/EventsPage';
-import  LoginPage  from '../pages/LoginPage';
-import RegisterPage  from '../pages/RegisterPage';
-import  HomePage  from '../pages/HomePage';
+import  {EventsPage}  from '../Pages/EventsPage';
+import  LoginPage  from '../Pages/LoginPage';
+import RegisterPage  from '../Pages/RegisterPage';
+import  HomePage  from '../Pages/HomePage';
 import "./index.css"
 function App() {
   const { theme } = useAuthStore();
