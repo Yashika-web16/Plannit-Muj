@@ -6,17 +6,15 @@ import {
   Users, 
   MapPin, 
   Trophy, 
-  Star, 
   Zap,
   ArrowRight,
-  CheckCircle
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { useAuthStore } from '../store/authStore';
 
-export const HomePage: React.FC = () => {
-  const { isAuthenticated, user } = useAuthStore();
+const HomePage: React.FC = () => {
+  const { isAuthenticated } = useAuthStore();
 
   const features = [
     {
@@ -325,3 +323,5 @@ export const HomePage: React.FC = () => {
     </div>
   );
 };
+
+export default HomePage;

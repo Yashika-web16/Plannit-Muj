@@ -19,7 +19,7 @@ import { useAuthStore } from '../store/authStore';
 import { mockEvents, eventCategories, departments } from '../data/mockData';
 import { formatDistanceToNow, format } from 'date-fns';
 
-export const EventsPage: React.FC = () => {
+const EventsPage: React.FC = () => {
   const { user } = useAuthStore();
   const { 
     searchTerm, 
@@ -332,3 +332,4 @@ export const EventsPage: React.FC = () => {
     </div>
   );
 };
+export  {EventsPage};
