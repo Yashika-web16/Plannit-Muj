@@ -73,12 +73,12 @@ export const Navbar: React.FC = () => {
           {/* Right side */}
           <div className="flex items-center space-x-4">
             {/* Theme Toggle */}
-            <button
+            {/* <button
               onClick={toggleTheme}
               className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors"
             >
               {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-            </button>
+            </button> */}
 
             {isAuthenticated ? (
               <>
