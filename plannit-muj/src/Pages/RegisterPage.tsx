@@ -73,7 +73,7 @@ const RegisterPage: React.FC = () => {
         .insert([
           {
             id: userId,
-            name: formData.name,
+            full_name: formData.name,
             email: formData.email,
             role: formData.role,
             department: formData.department,

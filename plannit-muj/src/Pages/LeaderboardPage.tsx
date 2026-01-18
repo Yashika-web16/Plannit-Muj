@@ -1,21 +1,29 @@
- import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { Trophy, Medal } from "lucide-react";
 
+type RegistrationUser = {
+  id: string;
+  name: string;
+  department: string;
+  points: number;
+};
+
 export default function LeaderboardPage() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<RegistrationUser[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Fetch leaderboard data from REGISTRATIONS table
   const fetchUsers = async () => {
     setLoading(true);
 
     const { data, error } = await supabase
-      .from("users")
-      .select("full_name, department, points")
+      .from("registrations")
+      .select("id, name, department, points")
       .order("points", { ascending: false });
 
     if (error) {
-      console.log("Supabase error:", error);
+      console.error("Leaderboard fetch error:", error);
     }
 
     if (data) {
@@ -26,7 +34,28 @@ export default function LeaderboardPage() {
   };
 
   useEffect(() => {
+    // Initial fetch
     fetchUsers();
+
+    // Realtime subscription on REGISTRATIONS table
+    const channel = supabase
+      .channel("registrations-leaderboard-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*", // INSERT | UPDATE | DELETE
+          schema: "public",
+          table: "registrations",
+        },
+        () => {
+          fetchUsers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return (
@@ -39,15 +68,18 @@ export default function LeaderboardPage() {
           MUJ Leaderboard
         </h1>
 
-        {/* Loading State */}
+        {/* Loading */}
         {loading ? (
-          <p className="text-gray-700 dark:text-gray-300">Loading...</p>
+          <p className="text-gray-700 dark:text-gray-300">Loading leaderboard...</p>
+        ) : users.length === 0 ? (
+          <p className="text-gray-600 dark:text-gray-400">
+            No students on leaderboard yet.
+          </p>
         ) : (
           <div className="space-y-4">
-
             {users.map((user, index) => (
               <div
-                key={index}
+                key={user.id}
                 className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow"
               >
                 {/* Rank + User Info */}
@@ -57,7 +89,7 @@ export default function LeaderboardPage() {
                   {index === 1 && <Medal className="text-gray-300" />}
                   {index === 2 && <Medal className="text-amber-600" />}
 
-                  {/* Ranks for others */}
+                  {/* Rank number */}
                   {index > 2 && (
                     <span className="text-gray-700 dark:text-gray-300 font-semibold">
                       #{index + 1}
@@ -66,7 +98,7 @@ export default function LeaderboardPage() {
 
                   <div>
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {user.full_name}
+                      {user.name}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-300">
                       {user.department}
