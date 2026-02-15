@@ -7,7 +7,6 @@ import {
   Mail,
   Lock,
   User,
-  GraduationCap,
   Calendar,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
@@ -50,11 +49,18 @@ const RegisterPage: React.FC = () => {
       }
 
       // 🔹 1: Create Auth user
-      const { data: authData, error: authError } =
-        await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-        });
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.name,
+            role: formData.role,
+            department: formData.department,
+            year: formData.role === "student" ? formData.year : null,
+          },
+        },
+      });
 
       if (authError) {
         toast.error(authError.message);
@@ -67,10 +73,10 @@ const RegisterPage: React.FC = () => {
         return;
       }
 
-      // 🔹 2: Insert into public.users
+      // 🔹 2: Insert into public.users (best effort)
       const { error: insertError } = await supabase
         .from("users")
-        .insert([
+        .upsert([
           {
             id: userId,
             full_name: formData.name,
@@ -84,12 +90,17 @@ const RegisterPage: React.FC = () => {
         ]);
 
       if (insertError) {
-        console.error(insertError);
-        toast.error("Failed saving profile");
+        // Don't fail sign up if row-level security blocks this step.
+        console.warn("Profile insert warning:", insertError.message);
+      }
+
+      // 🔹 3: Local login only when session exists
+      if (!authData.session) {
+        toast.success("Account created! Please verify your email, then login.");
+        navigate("/login");
         return;
       }
 
-      // 🔹 3: Local login
       login({
         id: userId,
         name: formData.name,

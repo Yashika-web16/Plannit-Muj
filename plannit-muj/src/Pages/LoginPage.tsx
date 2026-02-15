@@ -69,21 +69,37 @@ const LoginPage: React.FC = () => {
         .eq("id", userId)
         .single();
 
-      if (fetchError || !userData) {
-        toast.error("User profile not found.");
-        return;
+      if (fetchError) {
+        console.warn("User profile lookup warning:", fetchError.message);
+      }
+
+      const metadata = authData.user?.user_metadata ?? {};
+
+      if (!userData) {
+        const fallbackProfile = {
+          id: userId,
+          full_name: metadata.full_name || authData.user?.email?.split("@")[0] || "User",
+          email: authData.user?.email || email,
+          role: (metadata.role as "student" | "organizer") || "student",
+          department: metadata.department || "",
+          year: metadata.year || "",
+          points: 0,
+          created_at: new Date().toISOString(),
+        };
+
+        await supabase.from("users").upsert([fallbackProfile]);
       }
 
       // Save inside Zustand
       login({
-        id: userData.id,
-        name: userData.name,
-        email: userData.email,
-        role: userData.role,
-        department: userData.department,
-        year: userData.year,
-        points: userData.points,
-        createdAt: userData.created_at,
+        id: userId,
+        name: userData?.full_name || metadata.full_name || authData.user?.email?.split("@")[0] || "User",
+        email: userData?.email || authData.user?.email || email,
+        role: userData?.role || (metadata.role as "student" | "organizer") || "student",
+        department: userData?.department || metadata.department || "",
+        year: userData?.year || metadata.year || "",
+        points: userData?.points || 0,
+        createdAt: userData?.created_at || new Date().toISOString(),
       });
 
       toast.success("Welcome back!");
