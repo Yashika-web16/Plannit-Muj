@@ -22,6 +22,7 @@ const RegisterPage: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [rateLimitUntil, setRateLimitUntil] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -38,6 +39,11 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
 
     try {
+      if (rateLimitUntil && Date.now() < rateLimitUntil) {
+        toast.error("Please wait a minute before trying signup again.");
+        return;
+      }
+
       if (!hasSupabaseEnv) {
         toast.error(`App config missing: ${missingSupabaseEnv.join(", ")}`);
         return;
@@ -68,7 +74,15 @@ const RegisterPage: React.FC = () => {
       });
 
       if (authError) {
-        toast.error(authError.message);
+        const authMessage = authError.message.toLowerCase();
+        const isRateLimited = authError.status === 429 || authMessage.includes("rate limit");
+
+        if (isRateLimited) {
+          setRateLimitUntil(Date.now() + 60_000);
+          toast.error("Email rate limit exceeded. Check your inbox for an existing verification mail, or wait ~60 seconds before trying again.");
+        } else {
+          toast.error(authError.message);
+        }
         return;
       }
 
