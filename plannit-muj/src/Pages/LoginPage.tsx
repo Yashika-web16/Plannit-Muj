@@ -6,7 +6,7 @@ import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../store/authStore";
-import { supabase } from "../lib/supabaseClient";
+import { hasSupabaseEnv, missingSupabaseEnv, supabase } from "../lib/supabaseClient";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -22,6 +22,11 @@ const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
+      if (!hasSupabaseEnv) {
+        toast.error(`App config missing: ${missingSupabaseEnv.join(", ")}`);
+        return;
+      }
+
       /* --------------------------------------------------
        🔐 TEMPORARY HARDCODED LOGIN (Works Without Supabase)
        -------------------------------------------------- */
@@ -107,7 +112,12 @@ const LoginPage: React.FC = () => {
 
     } catch (err) {
       console.error(err);
-      toast.error("Something went wrong.");
+      const message = err instanceof Error ? err.message : "Something went wrong.";
+      if (message.toLowerCase().includes("failed to fetch")) {
+        toast.error("Unable to reach Supabase. In Vercel, set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Project Settings → Environment Variables, then redeploy.");
+      } else {
+        toast.error(message);
+      }
     } finally {
       setLoading(false);
     }

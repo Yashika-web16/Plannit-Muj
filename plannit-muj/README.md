@@ -67,3 +67,13 @@ export default tseslint.config([
   },
 ])
 ```
+
+
+## Supabase environment variables (required for login/signup)
+
+Set these in your local `.env` and in Vercel Project Settings → Environment Variables:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+After adding/updating Vercel env vars, redeploy the app. Missing values commonly cause `Failed to fetch` during auth requests.

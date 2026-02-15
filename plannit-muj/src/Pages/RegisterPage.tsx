@@ -14,7 +14,7 @@ import { Card } from "../../components/ui/Card";
 import { useAuthStore } from "../../store/authStore";
 import { departments } from "../../data/mockData";
 import toast from "react-hot-toast";
-import { supabase } from "../lib/supabaseClient";
+import { hasSupabaseEnv, missingSupabaseEnv, supabase } from "../lib/supabaseClient";
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -38,6 +38,11 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
 
     try {
+      if (!hasSupabaseEnv) {
+        toast.error(`App config missing: ${missingSupabaseEnv.join(", ")}`);
+        return;
+      }
+
       if (formData.password !== formData.confirmPassword) {
         toast.error("Passwords do not match");
         return;
@@ -117,7 +122,12 @@ const RegisterPage: React.FC = () => {
 
     } catch (err) {
       console.error(err);
-      toast.error("Something went wrong.");
+      const message = err instanceof Error ? err.message : "Something went wrong.";
+      if (message.toLowerCase().includes("failed to fetch")) {
+        toast.error("Unable to reach Supabase. In Vercel, set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Project Settings → Environment Variables, then redeploy.");
+      } else {
+        toast.error(message);
+      }
     } finally {
       setLoading(false);
     }
