@@ -7,7 +7,6 @@ import {
   Mail,
   Lock,
   User,
-  GraduationCap,
   Calendar,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
@@ -15,7 +14,7 @@ import { Card } from "../../components/ui/Card";
 import { useAuthStore } from "../../store/authStore";
 import { departments } from "../../data/mockData";
 import toast from "react-hot-toast";
-import { supabase } from "../lib/supabaseClient";
+import { hasSupabaseEnv, missingSupabaseEnv, supabase } from "../lib/supabaseClient";
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -23,6 +22,7 @@ const RegisterPage: React.FC = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [rateLimitUntil, setRateLimitUntil] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -39,6 +39,16 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
 
     try {
+      if (rateLimitUntil && Date.now() < rateLimitUntil) {
+        toast.error("Please wait a minute before trying signup again.");
+        return;
+      }
+
+      if (!hasSupabaseEnv) {
+        toast.error(`App config missing: ${missingSupabaseEnv.join(", ")}`);
+        return;
+      }
+
       if (formData.password !== formData.confirmPassword) {
         toast.error("Passwords do not match");
         return;
@@ -50,14 +60,29 @@ const RegisterPage: React.FC = () => {
       }
 
       // 🔹 1: Create Auth user
-      const { data: authData, error: authError } =
-        await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-        });
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.name,
+            role: formData.role,
+            department: formData.department,
+            year: formData.role === "student" ? formData.year : null,
+          },
+        },
+      });
 
       if (authError) {
-        toast.error(authError.message);
+        const authMessage = authError.message.toLowerCase();
+        const isRateLimited = authError.status === 429 || authMessage.includes("rate limit");
+
+        if (isRateLimited) {
+          setRateLimitUntil(Date.now() + 60_000);
+          toast.error("Email rate limit exceeded. Check your inbox for an existing verification mail, or wait ~60 seconds before trying again.");
+        } else {
+          toast.error(authError.message);
+        }
         return;
       }
 
@@ -67,10 +92,10 @@ const RegisterPage: React.FC = () => {
         return;
       }
 
-      // 🔹 2: Insert into public.users
+      // 🔹 2: Insert into public.users (best effort)
       const { error: insertError } = await supabase
         .from("users")
-        .insert([
+        .upsert([
           {
             id: userId,
             full_name: formData.name,
@@ -84,12 +109,17 @@ const RegisterPage: React.FC = () => {
         ]);
 
       if (insertError) {
-        console.error(insertError);
-        toast.error("Failed saving profile");
+        // Don't fail sign up if row-level security blocks this step.
+        console.warn("Profile insert warning:", insertError.message);
+      }
+
+      // 🔹 3: Local login only when session exists
+      if (!authData.session) {
+        toast.success("Account created! Please verify your email, then login.");
+        navigate("/login");
         return;
       }
 
-      // 🔹 3: Local login
       login({
         id: userId,
         name: formData.name,
@@ -106,7 +136,12 @@ const RegisterPage: React.FC = () => {
 
     } catch (err) {
       console.error(err);
-      toast.error("Something went wrong.");
+      const message = err instanceof Error ? err.message : "Something went wrong.";
+      if (message.toLowerCase().includes("failed to fetch")) {
+        toast.error("Unable to reach Supabase. In Vercel, set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Project Settings → Environment Variables, then redeploy.");
+      } else {
+        toast.error(message);
+      }
     } finally {
       setLoading(false);
     }

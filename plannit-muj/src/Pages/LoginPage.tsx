@@ -1,20 +1,17 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Mail } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../store/authStore";
-import { supabase } from "../lib/supabaseClient";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuthStore();
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,76 +19,31 @@ const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      /* --------------------------------------------------
-       🔐 TEMPORARY HARDCODED LOGIN (Works Without Supabase)
-       -------------------------------------------------- */
-      if (email === "test@jaipur.manipal.edu" && password === "test1234") {
-        login({
-          id: "hardcoded-user-001",
-          name: "Test User",
-          email: "test@jaipur.manipal.edu",
-          role: "student",
-          department: "Computer Science",
-          year: "2nd Year",
-          points: 0,
-          createdAt: new Date(),
-        });
+      const trimmedEmail = email.trim().toLowerCase();
 
-        toast.success("Logged in successfully!");
-        navigate("/dashboard");
+      if (!trimmedEmail || !trimmedEmail.includes("@")) {
+        toast.error("Please enter a valid email id.");
         return;
       }
 
-      /* --------------------------------------------------
-        REAL LOGIN (Supabase Auth)
-      --------------------------------------------------- */
-      const { data: authData, error: authError } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+      const displayName = trimmedEmail.split("@")[0] || "User";
 
-      if (authError) {
-        toast.error(authError.message);
-        return;
-      }
-
-      const userId = authData.user?.id;
-      if (!userId) {
-        toast.error("Login failed.");
-        return;
-      }
-
-      // Fetch profile from users table
-      const { data: userData, error: fetchError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      if (fetchError || !userData) {
-        toast.error("User profile not found.");
-        return;
-      }
-
-      // Save inside Zustand
       login({
-        id: userData.id,
-        name: userData.name,
-        email: userData.email,
-        role: userData.role,
-        department: userData.department,
-        year: userData.year,
-        points: userData.points,
-        createdAt: userData.created_at,
+        id: `email-${btoa(trimmedEmail)}`,
+        name: displayName,
+        email: trimmedEmail,
+        role: "student",
+        department: "",
+        year: "",
+        points: 0,
+        createdAt: new Date(),
       });
 
-      toast.success("Welcome back!");
+      toast.success("Logged in successfully!");
       navigate("/dashboard");
-
     } catch (err) {
       console.error(err);
-      toast.error("Something went wrong.");
+      toast.error("Unable to login right now. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -106,14 +58,9 @@ const LoginPage: React.FC = () => {
         className="max-w-md w-full"
       >
         <Card className="p-8">
-
-          <h1 className="text-2xl font-bold text-center mb-6">
-            Login to PlanIt-MUJ
-          </h1>
+          <h1 className="text-2xl font-bold text-center mb-6">Login to PlanIt-MUJ</h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-
-            {/* Email Input */}
             <div>
               <label className="block mb-2 text-sm font-medium">Email</label>
               <div className="relative">
@@ -129,42 +76,14 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Password Input */}
-            <div>
-              <label className="block mb-2 text-sm font-medium">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 text-gray-400" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border rounded-lg"
-                  placeholder="Enter your password"
-                />
-
-                <button
-                  type="button"
-                  className="absolute right-3 top-3"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff /> : <Eye />}
-                </button>
-              </div>
-            </div>
-
             <Button className="w-full" type="submit" isLoading={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 
-          <p className="text-center mt-6 text-sm">
-            Don’t have an account?{" "}
-            <Link to="/register" className="text-blue-600 hover:underline">
-              Create one
-            </Link>
+          <p className="text-center mt-6 text-sm text-gray-600 dark:text-gray-300">
+            Sign up is temporarily disabled.
           </p>
-
         </Card>
       </motion.div>
     </div>
