@@ -10,8 +10,6 @@ import {
   Calendar,
   MapPin,
   Trophy,
-  Moon,
-  Sun,
   LogOut
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
@@ -20,7 +18,7 @@ import { Button } from '../ui/Button';
 export const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const { user, isAuthenticated, theme, toggleTheme, logout } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
   const location = useLocation();
 
   const navigationItems = [
@@ -28,6 +26,11 @@ export const Navbar: React.FC = () => {
     { name: 'Venues', href: '/venues', icon: MapPin },
     { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
   ];
+
+  const adminNavigationItem =
+    user?.role === 'admin' || user?.role === 'organizer'
+      ? { name: 'Admin Portal', href: '/admin', icon: User }
+      : null;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -68,6 +71,19 @@ export const Navbar: React.FC = () => {
                 </Link>
               );
             })}
+            {adminNavigationItem && (
+              <Link
+                to={adminNavigationItem.href}
+                className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-all duration-200 ${
+                  isActive(adminNavigationItem.href)
+                    ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+              >
+                <adminNavigationItem.icon size={18} />
+                <span className="font-medium">{adminNavigationItem.name}</span>
+              </Link>
+            )}
           </div>
 
           {/* Right side */}
@@ -139,7 +155,7 @@ export const Navbar: React.FC = () => {
                         <span>Profile</span>
                       </Link>
                       <Link
-                        to="/dashboard"
+                        to={user?.role === "admin" || user?.role === "organizer" ? "/admin" : "/dashboard"}
                         className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                       >
                         <Calendar size={16} />
@@ -206,6 +222,20 @@ export const Navbar: React.FC = () => {
                 </Link>
               );
             })}
+            {adminNavigationItem && (
+              <Link
+                to={adminNavigationItem.href}
+                className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                  isActive(adminNavigationItem.href)
+                    ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                    : 'text-gray-600 dark:text-gray-300'
+                }`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <adminNavigationItem.icon size={20} />
+                <span className="font-medium">{adminNavigationItem.name}</span>
+              </Link>
+            )}
           </div>
         </motion.div>
       )}

@@ -82,6 +82,7 @@ function App() {
               <Route path="/venues" element={<VenuePage />} />
               <Route path="/venues/:id" element={<VenueDetailsPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/admin" element={<DashboardPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

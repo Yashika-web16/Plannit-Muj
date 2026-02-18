@@ -13,6 +13,7 @@ const LoginPage: React.FC = () => {
 
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<"auto" | "student" | "organizer" | "admin">("auto");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,11 +29,13 @@ const LoginPage: React.FC = () => {
 
       const displayName = trimmedEmail.split("@")[0] || "User";
 
-      const role = trimmedEmail.includes("admin")
+      const inferredRole = trimmedEmail.includes("admin")
         ? "admin"
         : trimmedEmail.includes("organizer") || trimmedEmail.includes("organiser")
           ? "organizer"
           : "student";
+
+      const role = selectedRole === "auto" ? inferredRole : selectedRole;
 
       login({
         id: `email-${btoa(trimmedEmail)}`,
@@ -46,7 +49,7 @@ const LoginPage: React.FC = () => {
       });
 
       toast.success("Logged in successfully!");
-      navigate("/dashboard");
+      navigate(role === "admin" || role === "organizer" ? "/admin" : "/dashboard");
     } catch (err) {
       console.error(err);
       toast.error("Unable to login right now. Please try again.");
@@ -80,6 +83,20 @@ const LoginPage: React.FC = () => {
                   placeholder="your.name@jaipur.manipal.edu"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block mb-2 text-sm font-medium">Login as</label>
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value as "auto" | "student" | "organizer" | "admin")}
+                className="w-full px-4 py-3 border rounded-lg"
+              >
+                <option value="auto">Auto detect from email</option>
+                <option value="student">Student</option>
+                <option value="organizer">Organizer</option>
+                <option value="admin">Admin</option>
+              </select>
             </div>
 
             <Button className="w-full" type="submit" isLoading={loading}>
