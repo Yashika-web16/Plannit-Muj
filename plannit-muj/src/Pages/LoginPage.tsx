@@ -28,11 +28,17 @@ const LoginPage: React.FC = () => {
 
       const displayName = trimmedEmail.split("@")[0] || "User";
 
+      const role = trimmedEmail.includes("admin")
+        ? "admin"
+        : trimmedEmail.includes("organizer") || trimmedEmail.includes("organiser")
+          ? "organizer"
+          : "student";
+
       login({
         id: `email-${btoa(trimmedEmail)}`,
         name: displayName,
         email: trimmedEmail,
-        role: "student",
+        role,
         department: "",
         year: "",
         points: 0,
